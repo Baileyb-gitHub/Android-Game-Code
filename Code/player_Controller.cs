@@ -17,7 +17,7 @@ public class player_Controller : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-       
+        gameObject.GetComponent<SpriteRenderer>().material = GameObject.FindWithTag("Game Data").GetComponent<Game_Data>().playerMaterial;     // sets player material to currently saved user selection stored in game data
     }
 
     // Update is called once per frame
@@ -68,7 +68,11 @@ public class player_Controller : MonoBehaviour
         if (collision.gameObject.tag == "Enemy")
         {
             levelData.gameLost();
-            Instantiate(deathParticles, transform.position, Quaternion.identity);
+            GameObject particles = Instantiate(deathParticles, transform.position, Quaternion.identity);
+
+            particles.GetComponent<Renderer>().material = GameObject.FindWithTag("Player").GetComponent<SpriteRenderer>().material;                    // sets the colour of death particles to match player material
+            particles.GetComponent<ParticleSystemRenderer>().material = GameObject.FindWithTag("Player").GetComponent<SpriteRenderer>().material;     // sets the colour of death particles to match player material
+
             Instantiate(deathAudio, transform.position, Quaternion.identity);
             Destroy(gameObject);
         }

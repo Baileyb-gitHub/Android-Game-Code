@@ -10,6 +10,7 @@ public class particle_Remover : MonoBehaviour
     void Start()
     {
         ps = GetComponent<ParticleSystem>();
+      
 
     }
 

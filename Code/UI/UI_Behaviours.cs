@@ -35,6 +35,10 @@ public class UI_Behaviours : MonoBehaviour
         Application.Quit();
     }
 
-   
+    public void saveApplicationData()
+    {
+       Game_Data gameData = GameObject.FindWithTag("Game Data").GetComponent<Game_Data>();
+        gameData.saveData();
+    }
 
 }

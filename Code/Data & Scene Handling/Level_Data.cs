@@ -165,23 +165,57 @@ public class Level_Data : MonoBehaviour
         enemyCount -= 1;
     }
 
-    public void gameLost()
+    public void gameLost()  // called once on game loss to display and set loss ui
     {
         gameOver = true;
         gameOverUI.SetActive(true);
         gameActiveUI.SetActive(false);
 
-       
+       if(score > gameData.highScore) 
+       {
+            gameData.highScore = score;
+       }
 
         xpWon = score / 10;
         xpWon = Mathf.Round(xpWon);
         xpSlider.value = gameData.currentXP / gameData.targetXP;
       //  Debug.Log("Starting XP = " + gameData.currentXP / gameData.targetXP );
-        xpGainSpeed = gameData.targetXP / xpGainSeconds; //speed of after game xp set to take 5 seconds per level
+        xpGainSpeed = xpWon / xpGainSeconds; //speed of after game xp set to take 5 seconds per level
 
 
         levelText.text = "LEVEL - " + gameData.playerlevel;
         endScoreText.text = "Score - " + score;
         xpWonText.text = "XP - " +xpWon;
     }
+
+    public void finishXP()   // skips process bar and automatically applies remainign xp, called when player skips xp bar via scene changes eg retry or menu
+    {
+        gameOver = false;// stops extra xp added
+        while(xpWon > 0) 
+        {
+            if (xpGainSpeed * Time.deltaTime > xpWon)
+            {
+                gameData.currentXP += xpWon;
+                xpWon = 0;
+
+            }
+            else 
+            {
+                gameData.currentXP += xpGainSpeed * Time.deltaTime;
+                xpWon -= xpGainSpeed * Time.deltaTime;
+            }
+
+          
+
+            if (gameData.currentXP >= gameData.targetXP)
+            {
+                gameData.levelUp();
+                levelText.text = "LEVEL - " + gameData.playerlevel;
+            }
+        }
+
+    }
+
+
+
 }
