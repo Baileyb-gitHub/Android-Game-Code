@@ -6,6 +6,7 @@ using UnityEngine;
 public class player_Controller : MonoBehaviour
 {
     public float moveSpeed;
+    public bool invincible;
     public Rigidbody2D myRigidBody;
     public bool clickOverwrite;
 
@@ -67,14 +68,22 @@ public class player_Controller : MonoBehaviour
     {
         if (collision.gameObject.tag == "Enemy")
         {
-            levelData.gameLost();
-            GameObject particles = Instantiate(deathParticles, transform.position, Quaternion.identity);
+            if(invincible == true)  // if player is experiencing invincible power up game loss is skipped
+            {
+            }
+            else
+            {
 
-            particles.GetComponent<Renderer>().material = GameObject.FindWithTag("Player").GetComponent<SpriteRenderer>().material;                    // sets the colour of death particles to match player material
-            particles.GetComponent<ParticleSystemRenderer>().material = GameObject.FindWithTag("Player").GetComponent<SpriteRenderer>().material;     // sets the colour of death particles to match player material
+                levelData.gameLost();
+                GameObject particles = Instantiate(deathParticles, transform.position, Quaternion.identity);
 
-            Instantiate(deathAudio, transform.position, Quaternion.identity);
-            Destroy(gameObject);
+                particles.GetComponent<Renderer>().material = GameObject.FindWithTag("Player").GetComponent<SpriteRenderer>().material;                    // sets the colour of death particles to match player material
+                particles.GetComponent<ParticleSystemRenderer>().material = GameObject.FindWithTag("Player").GetComponent<SpriteRenderer>().material;     // sets the colour of death particles to match player material
+
+                Instantiate(deathAudio, transform.position, Quaternion.identity);
+                Destroy(gameObject);
+            }
+
         }
     }
 

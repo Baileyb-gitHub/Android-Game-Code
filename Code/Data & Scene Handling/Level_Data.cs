@@ -9,16 +9,27 @@ public class Level_Data : MonoBehaviour
     [Header("Logic")]
     public bool gameOver;
 
-
-    [Header ("Ui References")]
+    [Header("Stats")]
     public float score;
+    public float scoreMultiplier;
     public float xpWon;
     public float xpCap;
     public float xpGainSeconds;
     private float xpGainSpeed;
-    public TextMeshProUGUI scoreText;
+
+    [Header(" UI References")] // references to Parents / chunks of ui for enabling and disabling
     public GameObject gameOverUI;
     public GameObject gameActiveUI;
+    public GameObject powerUpUI;
+
+    [Header ("Active UI ")]
+    public TextMeshProUGUI scoreText;
+    public bool powerUpActive;
+    private float powerUpTimer;
+    public TextMeshProUGUI powerUpText;
+    public TextMeshProUGUI powerUpTimerText;
+ 
+
     [Header("Loss Ui ")]
     public Slider xpSlider;
     public TextMeshProUGUI endScoreText;
@@ -27,7 +38,7 @@ public class Level_Data : MonoBehaviour
     public TextMeshProUGUI levelText;
     
 
-    [Header("Spawning")]
+    [Header("Spawning / Object Handling")]
     public List<GameObject> enemySpawns;
     public List<GameObject> enemyTypes;
     public List<GameObject> powerUpSpawns;
@@ -41,8 +52,8 @@ public class Level_Data : MonoBehaviour
     [Space]
     public int powerUpCount;
     public int targetPowerUpCount;
-    public float powerUpTimer;
-    public float powerUpTimerMax;
+    public float powerUpSpawnTimer;
+    public float powerUpSpawnTimerMax;
 
     [Header("References")]
     public Game_Data gameData;
@@ -52,6 +63,7 @@ public class Level_Data : MonoBehaviour
     {
         InvokeRepeating("OnceASecond", 1.0f, 1.0f);
         gameData = GameObject.FindWithTag("Game Data").GetComponent<Game_Data>();
+        scoreMultiplier = 1;
     }
 
     // Update is called once per frame
@@ -71,6 +83,19 @@ public class Level_Data : MonoBehaviour
     public void updateUI() 
     {
         scoreText.text = ("Score - " + score);
+        if(powerUpActive == true) 
+        {
+            powerUpTimer -= 1.0f * Time.deltaTime;
+            if (Mathf.Round(powerUpTimer) < 0.1) 
+            {
+                closePowerupUi();
+            }
+            else 
+            {
+                 powerUpTimerText.text =  Mathf.Round(powerUpTimer)  + " S";
+            }
+           
+        }
     }
 
     public void updateSpawns()
@@ -94,16 +119,16 @@ public class Level_Data : MonoBehaviour
 
         if (powerUpCount < targetPowerUpCount)
         {
-            powerUpTimer -= 1 * Time.deltaTime;  // if powerup is needed count down to next spawn
+            powerUpSpawnTimer -= 1 * Time.deltaTime;  // if powerup is needed count down to next spawn
 
-            if(powerUpTimer < 0.0f) 
+            if(powerUpSpawnTimer < 0.0f) 
             {
                 int powerUpIndex = Random.Range(0, powerUpTypes.Count - 1);
                 int spawnIndex = Random.Range(0, powerUpSpawns.Count - 1);
 
                 Instantiate(powerUpTypes[powerUpIndex], powerUpSpawns[spawnIndex].transform.position, Quaternion.identity);  // spawns random power up type at random power up spawn point;
                 powerUpCount += 1;
-                powerUpTimer = powerUpTimerMax;  // reset timer
+                powerUpSpawnTimer = powerUpSpawnTimerMax;  // reset timer
             }
            
         }
@@ -157,7 +182,7 @@ public class Level_Data : MonoBehaviour
     {
         if(gameOver == false) 
         {
-            score += scoreToAdd;
+            score += scoreToAdd * scoreMultiplier;
         }
     }
     public void enemyDeath()
@@ -216,6 +241,30 @@ public class Level_Data : MonoBehaviour
 
     }
 
+
+    public void setPowerupUi(string text, float timer)   // called by powerups on pickup to fill in ui info
+    {
+        powerUpText.text = text;
+        powerUpTimer = timer;
+        powerUpActive = true;
+        powerUpUI.SetActive(true);
+    }
+
+    private void closePowerupUi()  // called by powerups to remove  ui once powerup used
+    {
+        powerUpText.text = null;
+        powerUpTimer = 0.0f;
+        powerUpActive = false;
+        powerUpUI.SetActive(false);
+
+    }
+
+    
+
+    public void callSaveData() 
+    {
+        gameData.saveData();
+    }
 
 
 }
