@@ -86,10 +86,13 @@ public class enemy_Drone : MonoBehaviour
     {
         if (collision.gameObject.tag == "Enemy") 
         {
-            level_Data.addScore(destructionScore);
-            level_Data.enemyDeath();
-            Instantiate(deathParticles, transform.position, Quaternion.identity);
+           // level_Data.enemyDeath();
+         //   level_Data.addScore(destructionScore);
+            GameObject newParticles = Instantiate(deathParticles, transform.position, Quaternion.identity);
+            newParticles.GetComponent<ParticleSystemRenderer>().material = gameObject.GetComponent<SpriteRenderer>().material;
             Instantiate(deathAudio, transform.position, Quaternion.identity);
+            level_Data.enemyDeath();
+            level_Data.addScore(destructionScore);
             Destroy(gameObject);
         }
     }

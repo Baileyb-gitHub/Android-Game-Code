@@ -8,6 +8,9 @@ public class Level_Data : MonoBehaviour
 {
     [Header("Logic")]
     public bool gameOver;
+    public string levelMode;
+    public int levelNum;
+    public float victoryThreshold;
 
     [Header("Stats")]
     public float score;
@@ -15,7 +18,7 @@ public class Level_Data : MonoBehaviour
     public float xpWon;
     public float xpCap;
     public float xpGainSeconds;
-    private float xpGainSpeed;
+    public float xpGainSpeed;
 
     [Header(" UI References")] // references to Parents / chunks of ui for enabling and disabling
     public GameObject gameOverUI;
@@ -25,7 +28,7 @@ public class Level_Data : MonoBehaviour
     [Header ("Active UI ")]
     public TextMeshProUGUI scoreText;
     public bool powerUpActive;
-    private float powerUpTimer;
+    public float powerUpTimer;
     public TextMeshProUGUI powerUpText;
     public TextMeshProUGUI powerUpTimerText;
  
@@ -36,24 +39,10 @@ public class Level_Data : MonoBehaviour
     public TextMeshProUGUI xpWonText;
     public TextMeshProUGUI xpStatusText;
     public TextMeshProUGUI levelText;
-    
+
 
     [Header("Spawning / Object Handling")]
-    public List<GameObject> enemySpawns;
-    public List<GameObject> enemyTypes;
-    public List<GameObject> powerUpSpawns;
-    public List<GameObject> powerUpTypes;
-    [Space]
-    public float challengeValue;
-    public int enemyCount;
-    public int targetEnemyCount;
-    public float enemyTimer;
-    public float enemyTimerMax;
-    [Space]
-    public int powerUpCount;
-    public int targetPowerUpCount;
-    public float powerUpSpawnTimer;
-    public float powerUpSpawnTimerMax;
+    public adaptiveDifficulty spawnHandler;
 
     [Header("References")]
     public Game_Data gameData;
@@ -70,7 +59,7 @@ public class Level_Data : MonoBehaviour
     void Update()
     {
         updateUI();
-        updateSpawns();
+
 
         if(gameOver == true) 
         {
@@ -80,7 +69,7 @@ public class Level_Data : MonoBehaviour
     }
 
 
-    public void updateUI() 
+    public virtual void updateUI() 
     {
         scoreText.text = ("Score - " + score);
         if(powerUpActive == true) 
@@ -98,44 +87,7 @@ public class Level_Data : MonoBehaviour
         }
     }
 
-    public void updateSpawns()
-    {
-        if(enemyCount < targetEnemyCount) 
-        {
-            enemyTimer -= 1 * Time.deltaTime;
-
-            if(enemyTimer< 0.0f) 
-            {
-                int enemyIndex = Random.Range(0, enemyTypes.Count - 1);
-                int spawnIndex = Random.Range(0, enemySpawns.Count - 1);
-
-                Instantiate(enemyTypes[enemyIndex], enemySpawns[spawnIndex].transform.position, Quaternion.identity);  // spawns random enemy type at random spawn point;
-                enemyCount += 1;
-                enemyTimer = enemyTimerMax;  // reset timer
-            }
-            
-        }
-
-
-        if (powerUpCount < targetPowerUpCount)
-        {
-            powerUpSpawnTimer -= 1 * Time.deltaTime;  // if powerup is needed count down to next spawn
-
-            if(powerUpSpawnTimer < 0.0f) 
-            {
-                int powerUpIndex = Random.Range(0, powerUpTypes.Count - 1);
-                int spawnIndex = Random.Range(0, powerUpSpawns.Count - 1);
-
-                Instantiate(powerUpTypes[powerUpIndex], powerUpSpawns[spawnIndex].transform.position, Quaternion.identity);  // spawns random power up type at random power up spawn point;
-                powerUpCount += 1;
-                powerUpSpawnTimer = powerUpSpawnTimerMax;  // reset timer
-            }
-           
-        }
-
-
-
-    }
+  
 
     public void updateLossUI() 
     {
@@ -173,7 +125,7 @@ public class Level_Data : MonoBehaviour
 
     }
 
-    void OnceASecond() 
+    public virtual void OnceASecond() 
     {
         addScore(1);
     }
@@ -185,24 +137,39 @@ public class Level_Data : MonoBehaviour
             score += scoreToAdd * scoreMultiplier;
         }
     }
-    public void enemyDeath()
+    public virtual void enemyDeath()
     {
-        enemyCount -= 1;
+         spawnHandler.enemyCount -= 1;
+        gameData.UpdateTotalStats(0, 1, 0, 0);
     }
 
-    public void gameLost()  // called once on game loss to display and set loss ui
+    public virtual void gameLost()  // called once on game loss to display and set loss ui
     {
-        gameOver = true;
+
+        xpWon = score / 10;  // calculates score for game
+        xpWon = Mathf.Round(xpWon);
+
+        gameData.UpdateTotalStats(1, 0, xpWon, score);
+      
+    
+
+
+    gameOver = true;
+        checkForCompletion();
+
         gameOverUI.SetActive(true);
         gameActiveUI.SetActive(false);
 
-       if(score > gameData.highScore) 
+        cloudOnceServices.instance.submitScoreToLeaderboard(Mathf.RoundToInt(score));
+
+       if (score > gameData.highScore) 
        {
             gameData.highScore = score;
+            gameData.totalHighScores += 1;
+            cloudOnceServices.instance.checkScoreAch(); //  check to see if player has unlocked high score based achievement
        }
 
-        xpWon = score / 10;
-        xpWon = Mathf.Round(xpWon);
+       
         xpSlider.value = gameData.currentXP / gameData.targetXP;
       //  Debug.Log("Starting XP = " + gameData.currentXP / gameData.targetXP );
         xpGainSpeed = xpWon / xpGainSeconds; //speed of after game xp set to take 5 seconds per level
@@ -241,6 +208,15 @@ public class Level_Data : MonoBehaviour
 
     }
 
+    public virtual void checkForCompletion()
+    {
+        if (score >= victoryThreshold)
+        {
+            gameData.completeLevel(levelMode, levelNum);
+        }
+    }
+
+    // POWERUP HANDLING
 
     public void setPowerupUi(string text, float timer)   // called by powerups on pickup to fill in ui info
     {
@@ -250,7 +226,7 @@ public class Level_Data : MonoBehaviour
         powerUpUI.SetActive(true);
     }
 
-    private void closePowerupUi()  // called by powerups to remove  ui once powerup used
+    public void closePowerupUi()  // called by powerups to remove  ui once powerup used
     {
         powerUpText.text = null;
         powerUpTimer = 0.0f;
@@ -258,6 +234,8 @@ public class Level_Data : MonoBehaviour
         powerUpUI.SetActive(false);
 
     }
+
+
 
     
 

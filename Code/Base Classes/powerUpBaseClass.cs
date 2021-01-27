@@ -30,7 +30,7 @@ public class powerUpBaseClass : MonoBehaviour  // base class for powerups handli
         
         if(collision.gameObject.tag == "Player") 
         {
-            levelReference.powerUpCount -= 1;  // removes poweup for active powerUp count
+            levelReference.spawnHandler.powerUpCount -= 1;  // removes poweup for active powerUp count
             Instantiate(pickupParticles, transform.position, Quaternion.identity);
             Instantiate(pickUpAudio, transform.position, Quaternion.identity);
             StartCoroutine( applyPowerUp()     );

@@ -9,7 +9,7 @@ public class camera_Code : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        
+        uppdateAudioListener();
     }
 
     // Update is called once per frame
@@ -21,4 +21,14 @@ public class camera_Code : MonoBehaviour
         }
        
     }
+
+
+    public void uppdateAudioListener()   // sets volume of listner to current value stored in game data as player choice
+    {
+        float newVol = AudioListener.volume;
+        newVol = GameObject.FindWithTag("Game Data").GetComponent<Game_Data>().gameVolume;
+        AudioListener.volume = newVol;
+    }
+
+
 }
